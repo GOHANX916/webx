@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FF 8 Level ID Buying</title>
+    <style>
+        body {
+            background-color: #1a1a1a;
+            color: white;
+            text-align: center;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            margin-top: 50px;
+            padding: 20px;
+        }
+        .qr-code {
+            margin: 20px 0;
+            width: 200px;
+            height: 200px;
+            border-radius: 10px;
+            border: 2px solid white;
+        }
+        .input-box {
+            margin: 20px 0;
+        }
+        input, button {
+            padding: 10px;
+            font-size: 16px;
+            border-radius: 5px;
+            border: none;
+        }
+        input {
+            width: 250px;
+            text-align: center;
+        }
+        button {
+            background-color: #ff6600;
+            color: white;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #cc5200;
+        }
+        .status {
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Welcome to FF 8 Level ID Buying Website</h1>
+        <h2>BY LEGEND VIP</h2>
+        <h3>Pay ₹40 to Purchase an FF ID</h3>
+        <img class="qr-code" src="https://i.postimg.cc/zXrH8zKW/IMG-20250224-110955-828.jpg" alt="Payment QR Code">
+        <p>Scan the QR code to make the payment</p>
+        
+        <div class="input-box">
+            <label for="transactionId">Enter Your Transaction ID:</label><br>
+            <input type="text" id="transactionId" placeholder="Transaction ID">
+            <button onclick="submitTransaction()">Submit</button>
+        </div>
+        <p id="message" class="status"></p>
+        <p id="ffCredentials" class="status"></p>
+    </div>
+
+    <script>
+        let transactionId = "";
+
+        function submitTransaction() {
+            transactionId = document.getElementById('transactionId').value;
+            if (!transactionId) {
+                alert('Please enter a transaction ID.');
+                return;
+            }
+
+            fetch('https://panel-production-463f.up.railway.app/submit-transaction', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ transactionId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('message').innerText = 'Submitted successfully. Waiting for verification...';
+                checkTransactionStatus();
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        function checkTransactionStatus() {
+            if (!transactionId) return;
+            
+            fetch('https://panel-production-463f.up.railway.app/get-payments')
+                .then(response => response.json())
+                .then(data => {
+                    const payment = data.find(p => p.transactionId === transactionId);
+                    if (payment && payment.verified) {
+                        document.getElementById('message').innerText = 'Transaction verified! Here are your FF ID details:';
+                        document.getElementById('ffCredentials').innerText = `ID: ${payment.ffAccount.id}, Password: ${payment.ffAccount.password}`;
+                    } else {
+                        setTimeout(checkTransactionStatus, 2000); // Check every 2 seconds
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+        }
+    </script>
+</body>
+</html>
